@@ -30,9 +30,16 @@ if (useInMemory)
 }
 else
 {
-    var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
-        ?? Environment.GetEnvironmentVariable("DATABASE_URL")
-        ?? throw new InvalidOperationException("No database connection string found.");
+    var configConn = builder.Configuration.GetConnectionString("DefaultConnection");
+    var envConn = Environment.GetEnvironmentVariable("DATABASE_URL");
+    
+    var connectionString = !string.IsNullOrWhiteSpace(configConn) ? configConn : envConn;
+
+    if (string.IsNullOrWhiteSpace(connectionString))
+    {
+        throw new InvalidOperationException("No database connection string found in appsettings or environment variables.");
+    }
+    
     builder.Services.AddDbContext<ApplicationDbContext>(opt =>
         opt.UseNpgsql(connectionString));
 }
