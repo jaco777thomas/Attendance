@@ -1,0 +1,44 @@
+@model List<Attendance.Models.Entities.Notice>
+@{
+    ViewData["Title"] = "Notices";
+    var canManage = User.IsInRole("HeadMaster") || User.IsInRole("NoticeManager");
+}
+
+<div class="page-header">
+    <div><h1>📢 Notice Board</h1><p>@Model.Count notice(s)</p></div>
+    @if (canManage)
+    {
+        <a href="@Url.Action("Create")" class="btn btn-primary" id="addNoticeBtn">➕ Post Notice</a>
+    }
+</div>
+
+@if (!Model.Any())
+{
+    <div class="alert alert-info text-center" style="text-align:center;">No notices yet. @(canManage ? "Post the first one!" : "")</div>
+}
+else
+{
+    foreach (var n in Model)
+    {
+        <div class="notice-item">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:.5rem;">
+                <div>
+                    <h6>@n.Title</h6>
+                    <p style="white-space:pre-wrap;margin:.35rem 0;color:var(--text);">@n.Message</p>
+                </div>
+                @if (canManage)
+                {
+                    <div class="btn-group">
+                        <a href="@Url.Action("Edit", new {id=n.Id})" class="btn btn-secondary btn-sm" id="editNotice_@n.Id">✏️</a>
+                        <a href="@Url.Action("Delete", new {id=n.Id})" class="btn btn-danger btn-sm" id="deleteNotice_@n.Id">🗑️</a>
+                    </div>
+                }
+            </div>
+            <div class="notice-meta">
+                <span class="badge badge-info">@n.Target</span>
+                <span style="font-size:.7rem;color:var(--text-muted);">📅 @n.Date.ToString("MMM dd, yyyy")</span>
+                <span style="font-size:.7rem;color:var(--text-muted);">👤 @n.CreatedBy.Name</span>
+            </div>
+        </div>
+    }
+}

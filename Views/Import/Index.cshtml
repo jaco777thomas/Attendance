@@ -1,0 +1,33 @@
+@{ ViewData["Title"] = "Import Students"; }
+<div class="page-header"><div><h1>📥 Import Students</h1><p>Upload an Excel file (.xlsx) to bulk add students.</p></div><a href="@Url.Action("Index","Students")" class="btn btn-secondary">← Back to Students</a></div>
+<div class="card" style="max-width:600px;">
+    <div class="card-body">
+        <form asp-action="Index" method="post" enctype="multipart/form-data">
+            @Html.AntiForgeryToken()
+            <div class="alert alert-info">
+                <strong>Format Guide:</strong> The Excel file should have the following columns in order:
+                <ul>
+                    <li><strong>Column A:</strong> Class (e.g., LKG, UKG, 1, 2, ... 15)</li>
+                    <li><strong>Column B:</strong> Full Name</li>
+                    <li><strong>Column C:</strong> Language (English, Kannada, Malayalam)</li>
+                    <li><strong>Column D:</strong> Date of Birth (YYYY-MM-DD)</li>
+                    <li><strong>Column E:</strong> Age</li>
+                    <li><strong>Column F:</strong> Father's Name</li>
+                    <li><strong>Column G:</strong> Phone Number</li>
+                    <li><strong>Column H:</strong> Mother's Name</li>
+                    <li><strong>Column I:</strong> Phone Number 2</li>
+                    <li><strong>Column J:</strong> Home Address</li>
+                </ul>
+                <small>* The first row is treated as a header and skipped.</small>
+            </div>
+            <div class="form-group">
+                <label>Select Excel File (.xlsx)</label>
+                <input type="file" name="excelFile" class="form-control" accept=".xlsx" required />
+            </div>
+            <div class="btn-group" style="margin-top:1rem;">
+                <button type="submit" class="btn btn-primary">🚀 Start Import</button>
+                <a href="@Url.Action("Index","Students")" class="btn btn-secondary">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>

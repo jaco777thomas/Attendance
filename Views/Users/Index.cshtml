@@ -1,0 +1,44 @@
+@model List<Attendance.Models.Entities.User>
+@{
+    ViewData["Title"] = "Users";
+}
+<div class="page-header">
+    <div><h1>👥 Users</h1><p>@Model.Count user(s)</p></div>
+    <a href="@Url.Action("Create")" class="btn btn-primary" id="addUserBtn">➕ Add User</a>
+</div>
+<div class="card">
+    <div class="table-responsive">
+        <table>
+            <thead><tr><th>#</th><th>Name</th><th>Email</th><th>Phone</th><th>Role</th><th>Status</th><th>Actions</th></tr></thead>
+            <tbody>
+                @{ int i = 1; }
+                @foreach (var u in Model)
+                {
+                    <tr>
+                        <td>@i++</td>
+                        <td><strong>@u.Name</strong></td>
+                        <td>@u.Email</td>
+                        <td>@u.Phone</td>
+                        <td>
+                            @foreach (var ur in u.UserRoles)
+                            {
+                                <span class="badge badge-info">@ur.Role.Name</span>
+                            }
+                        </td>
+                        <td>@if (u.IsActive) { <span class="badge badge-success">Active</span> } else { <span class="badge badge-secondary">Inactive</span> }</td>
+                        <td>
+                            <div class="btn-group">
+                                <a href="@Url.Action("Edit", new{id=u.Id})" class="btn btn-secondary btn-sm" id="editUser_@u.Id">✏️</a>
+                                @if (User.IsInRole("HeadMaster"))
+                                {
+                                    <a href="@Url.Action("Delete", new{id=u.Id})" class="btn btn-danger btn-sm" id="deleteUser_@u.Id">🗑️</a>
+                                }
+                            </div>
+                        </td>
+                    </tr>
+                }
+                @if (!Model.Any()) { <tr><td colspan="7" style="text-align:center;padding:2rem;color:var(--text-muted);">No users found.</td></tr> }
+            </tbody>
+        </table>
+    </div>
+</div>

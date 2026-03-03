@@ -1,0 +1,156 @@
+@model Attendance.Models.ViewModels.StudentListViewModel
+@{
+    ViewData["Title"] = "Students";
+    var role = User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value ?? "";
+    var isAdmin = role == "HeadMaster" || role == "AttendanceIncharge";
+}
+
+<div class="page-header">
+    <div><h1>🎓 Students</h1><p>@Model.TotalCount student(s) found</p></div>
+    <div class="btn-group">
+        @if (isAdmin)
+        {
+            <a href="@Url.Action("Create")" class="btn btn-primary" id="addStudentBtn">➕ Add Student</a>
+        }
+    </div>
+</div>
+
+<!-- Filters -->
+<div class="filter-bar">
+    <form method="get" id="filterForm">
+        <div class="form-group">
+            <label>Class</label>
+            <select name="filterClass" class="form-select" style="width:100px;" id="filterClass">
+                <option value="">All</option>
+                <option value="NURSERY" selected="@(Model.FilterClass == "NURSERY")">NURSERY</option>
+                <option value="LKG" selected="@(Model.FilterClass == "LKG")">LKG</option>
+                <option value="UKG" selected="@(Model.FilterClass == "UKG")">UKG</option>
+                @for (int i = 1; i <= 15; i++) {
+                    <option value="@i" selected="@(Model.FilterClass == i.ToString())">Class @i</option>
+                }
+            </select>
+        </div>
+        <div class="form-group">
+            <label>Division</label>
+            <select name="filterDivision" class="form-select" style="width:100px;" id="filterDivision">
+                <option value="">All</option>
+                <option value="A" selected="@(Model.FilterDivision == Attendance.Models.Entities.Division.A)">Division A</option>
+                <option value="B" selected="@(Model.FilterDivision == Attendance.Models.Entities.Division.B)">Division B</option>
+                <option value="C" selected="@(Model.FilterDivision == Attendance.Models.Entities.Division.C)">Division C</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label>Language</label>
+            <select name="filterLanguage" class="form-select" style="width:120px;" id="filterLanguage">
+                <option value="">All</option>
+                <option value="English" selected="@(Model.FilterLanguage == Attendance.Models.Entities.Language.English)">English</option>
+                <option value="Kannada" selected="@(Model.FilterLanguage == Attendance.Models.Entities.Language.Kannada)">Kannada</option>
+                <option value="Malayalam" selected="@(Model.FilterLanguage == Attendance.Models.Entities.Language.Malayalam)">Malayalam</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label>Status</label>
+            <select name="filterStatus" class="form-select" style="width:120px;" id="filterStatus">
+                <option value="">All</option>
+                <option value="Active" selected="@(Model.FilterStatus == Attendance.Models.Entities.StudentStatus.Active)">Active</option>
+                <option value="Inactive" selected="@(Model.FilterStatus == Attendance.Models.Entities.StudentStatus.Inactive)">Inactive</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label>Search</label>
+            <input type="text" name="search" value="@Model.SearchName" class="form-control" placeholder="Student name..." style="width:180px;" id="searchInput"/>
+        </div>
+        <div class="form-group">
+            <label>&nbsp;</label>
+            <div class="btn-group">
+                <button type="submit" class="btn btn-primary" id="applyFilter">🔍 Filter</button>
+                <a href="@Url.Action("Index")" class="btn btn-secondary" id="clearFilter">Clear</a>
+            </div>
+        </div>
+    </form>
+</div>
+
+@if (isAdmin)
+{
+    <div class="btn-group" style="margin-bottom:.75rem;">
+        <button class="btn btn-success btn-sm" id="bulkActivateBtn" onclick="bulkAction('Active')">✅ Bulk Activate</button>
+        <button class="btn btn-danger btn-sm" id="bulkDeactivateBtn" onclick="bulkAction('Inactive')">❌ Bulk Deactivate</button>
+    </div>
+}
+
+<div class="card">
+    <div class="table-responsive">
+        <table>
+            <thead>
+                <tr>
+                    @if (isAdmin) { <th><input type="checkbox" id="selectAll" style="width:16px;" /></th> }
+                    <th>#</th><th>Name</th><th>Class</th><th>Div</th><th>Lang</th><th>Father</th><th>Phone</th><th>Status</th><th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @{ int idx = 1; }
+                @foreach (var s in Model.Students)
+                {
+                    <tr>
+                        @if (isAdmin)
+                        {
+                            <td><input type="checkbox" class="row-check" value="@s.Id" /></td>
+                        }
+                        <td>@(idx++)</td>
+                        <td><strong>@s.Name</strong></td>
+                        <td>@s.Class</td>
+                        <td>@s.Division</td>
+                        <td>@s.Language</td>
+                        <td>@s.FatherName</td>
+                        <td>@s.Phone</td>
+                        <td>
+                            @if (s.Status == Attendance.Models.Entities.StudentStatus.Active)
+                            { <span class="badge badge-success">Active</span> }
+                            else
+                            { <span class="badge badge-secondary">Inactive</span> }
+                        </td>
+                        <td>
+                            <div class="btn-group">
+                                <a href="@Url.Action("Edit", new {id=s.Id})" class="btn btn-secondary btn-sm" id="editStudent_@s.Id">✏️</a>
+                                @if (isAdmin)
+                                {
+                                    <form asp-action="ToggleStatus" asp-route-id="@s.Id" method="post" style="display:inline;">
+                                        @Html.AntiForgeryToken()
+                                        <button type="submit" class="btn btn-sm @(s.Status == Attendance.Models.Entities.StudentStatus.Active ? "btn-warning" : "btn-success")" id="toggleStatus_@s.Id"
+                                                title="@(s.Status == Attendance.Models.Entities.StudentStatus.Active ? "Deactivate" : "Activate")">
+                                            @(s.Status == Attendance.Models.Entities.StudentStatus.Active ? "🔒" : "🔓")
+                                        </button>
+                                    </form>
+                                    <a href="@Url.Action("Delete", new {id=s.Id})" class="btn btn-danger btn-sm" id="deleteStudent_@s.Id">🗑️</a>
+                                }
+                            </div>
+                        </td>
+                    </tr>
+                }
+                @if (!Model.Students.Any())
+                {
+                    <tr><td colspan="@(isAdmin ? 10 : 9)" style="text-align:center;padding:2rem;color:var(--text-muted);">No students found. <a href="@Url.Action("Create")">Add one?</a></td></tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+document.getElementById('selectAll')?.addEventListener('change', function() {
+    document.querySelectorAll('.row-check').forEach(cb => cb.checked = this.checked);
+});
+async function bulkAction(status) {
+    const ids = Array.from(document.querySelectorAll('.row-check:checked')).map(c => parseInt(c.value));
+    if (!ids.length) { alert('Please select at least one student.'); return; }
+    if (!confirm(`${status} ${ids.length} student(s)?`)) return;
+    const res = await fetch('@Url.Action("BulkStatus")', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ids, status })
+    });
+    const data = await res.json();
+    if (data.success) location.reload();
+}
+</script>
+}

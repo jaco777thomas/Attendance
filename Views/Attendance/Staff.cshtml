@@ -1,0 +1,73 @@
+@model Attendance.Models.ViewModels.StaffAttendanceMarkViewModel
+@{
+    ViewData["Title"] = "Staff Attendance";
+}
+
+<div class="page-header">
+    <div><h1>👩‍💼 Staff Attendance</h1><p>@Model.Date.ToString("dddd, MMMM dd, yyyy")</p></div>
+    <form method="get" style="display:flex;gap:.5rem;align-items:flex-end;">
+        <div class="form-group" style="margin:0;">
+            <label>Change Date</label>
+            <input type="date" name="date" value="@Model.Date.ToString("yyyy-MM-dd")" class="form-control" max="@DateTime.Today.ToString("yyyy-MM-dd")" id="staffAttDate"/>
+        </div>
+        <button type="submit" class="btn btn-secondary btn-sm" id="changeDateBtn">Go</button>
+    </form>
+</div>
+
+<form asp-action="SaveStaffAttendance" method="post">
+    @Html.AntiForgeryToken()
+    <input type="hidden" name="Date" value="@Model.Date.ToString("yyyy-MM-dd")"/>
+    <div class="card">
+        <div class="table-responsive">
+            <table>
+                <thead><tr><th>#</th><th>Staff Name</th><th>Status</th></tr></thead>
+                <tbody>
+                    @{ int i = 0; }
+                    @foreach (var row in Model.Rows)
+                    {
+                        <input type="hidden" name="Rows[@i].UserId" value="@row.UserId"/>
+                        <input type="hidden" name="Rows[@i].StaffName" value="@row.StaffName"/>
+                        <tr>
+                            <td>@(i+1)</td>
+                            <td><strong>@row.StaffName</strong></td>
+                            <td>
+                                @if (row.CanEdit)
+                                {
+                                    <div class="att-status">
+                                        <label class="att-radio-label present">
+                                            <input type="radio" name="Rows[@i].Status" value="Present" @(row.Status == Attendance.Models.Entities.AttendanceStatus.Present ? "checked" : "")/>
+                                            ✅ Present
+                                        </label>
+                                        <label class="att-radio-label absent">
+                                            <input type="radio" name="Rows[@i].Status" value="Absent" @(row.Status == Attendance.Models.Entities.AttendanceStatus.Absent ? "checked" : "")/>
+                                            ❌ Absent
+                                        </label>
+                                    </div>
+                                }
+                                else
+                                {
+                                    @if (row.Status == Attendance.Models.Entities.AttendanceStatus.Present)
+                                    { <span class="badge badge-success">Present</span> }
+                                    else
+                                    { <span class="badge badge-danger">Absent</span> }
+                                    <input type="hidden" name="Rows[@i].Status" value="@row.Status"/>
+                                }
+                            </td>
+                        </tr>
+                        i++;
+                    }
+                    @if (!Model.Rows.Any())
+                    {
+                        <tr><td colspan="3" style="text-align:center;padding:2rem;color:var(--text-muted);">No staff found.</td></tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+        @if (Model.Rows.Any(r => r.CanEdit))
+        {
+            <div class="card-body" style="border-top:1px solid var(--border);">
+                <button type="submit" class="btn btn-primary" id="saveStaffAtt">💾 Save Attendance</button>
+            </div>
+        }
+    </div>
+</form>

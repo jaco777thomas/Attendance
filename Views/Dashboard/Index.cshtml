@@ -1,0 +1,98 @@
+@model Attendance.Models.ViewModels.DashboardViewModel
+@using Attendance.Models.Entities
+@{
+    ViewData["Title"] = "Dashboard";
+    UserRole role = (UserRole)(ViewBag.Role ?? UserRole.None);
+    bool isAdmin = role.HasFlag(UserRole.Admin) || role.HasFlag(UserRole.HeadMaster) || role.HasFlag(UserRole.AttendanceIncharge);
+    bool canManageAll = role.HasFlag(UserRole.Admin) || role.HasFlag(UserRole.HeadMaster) || role.HasFlag(UserRole.AttendanceIncharge) || role.HasFlag(UserRole.StudentManager);
+}
+
+<div class="page-header">
+    <div>
+        <h1>Welcome back! 👋</h1>
+        <p>@DateTime.Today.ToString("dddd, MMMM dd, yyyy")</p>
+    </div>
+</div>
+
+<!-- Stats Grid -->
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-icon indigo">🎓</div>
+        <div><div class="stat-value">@Model.ActiveStudents</div><div class="stat-label">Active Students</div></div>
+    </div>
+    @if (isAdmin)
+    {
+        <div class="stat-card">
+            <div class="stat-icon blue">📚</div>
+            <div><div class="stat-value">@Model.TotalStudents</div><div class="stat-label">Total (incl. Inactive)</div></div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon green">👩‍🏫</div>
+            <div><div class="stat-value">@Model.TotalTeachers</div><div class="stat-label">Active Teachers</div></div>
+        </div>
+    }
+    <div class="stat-card">
+        <div class="stat-icon green">✅</div>
+        <div><div class="stat-value">@Model.PresentStudentsToday</div><div class="stat-label">Students Present Today</div></div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon red">❌</div>
+        <div><div class="stat-value">@Model.AbsentStudentsToday</div><div class="stat-label">Students Absent Today</div></div>
+    </div>
+    @if (isAdmin)
+    {
+        <div class="stat-card">
+            <div class="stat-icon blue">👩‍🏫✅</div>
+            <div><div class="stat-value">@Model.PresentTeachersToday</div><div class="stat-label">Teachers Present Today</div></div>
+        </div>
+    }
+</div>
+
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;flex-wrap:wrap;">
+    <!-- Quick actions -->
+    <div class="card">
+        <div class="card-header"><h5>⚡ Quick Actions</h5></div>
+        <div class="card-body" style="display:flex;flex-direction:column;gap:.6rem;">
+            <a href="@Url.Action("Students","Attendance")" class="btn btn-primary" id="quickMarkStudent">✅ Mark Student Attendance</a>
+            @if (!role.HasFlag(UserRole.Teacher) || role.HasFlag(UserRole.Admin) || role.HasFlag(UserRole.HeadMaster) || role.HasFlag(UserRole.AttendanceIncharge))
+            {
+                <a href="@Url.Action("Staff","Attendance")" class="btn btn-success" id="quickMarkTeacher">👩‍🏫 Mark Teacher Attendance</a>
+            }
+            <a href="@Url.Action("Index","Reports")" class="btn btn-secondary" id="quickReports">📊 View Reports</a>
+            @if (canManageAll)
+            {
+                <a href="@Url.Action("Create","Students")" class="btn btn-secondary" id="quickAddStudent">➕ Add New Student</a>
+                <a href="@Url.Action("Create","Notices")" class="btn btn-secondary" id="quickAddNotice">📢 Post New Notice</a>
+                <a href="@Url.Action("Index","Promotion")" class="btn btn-secondary" id="quickPromotion">🎓 Year Promotion</a>
+            }
+        </div>
+    </div>
+
+    <!-- Recent Notices -->
+    <div class="card">
+        <div class="card-header">
+            <h5>📢 Recent Notices</h5>
+            <a href="@Url.Action("Index","Notices")" class="btn btn-secondary btn-sm">View All</a>
+        </div>
+        <div class="card-body" style="padding:.75rem;">
+            @if (!Model.RecentNotices.Any())
+            {
+                <p style="color:var(--text-muted);font-size:.875rem;text-align:center;padding:1rem;">No notices posted yet.</p>
+            }
+            else
+            {
+                @foreach (var n in Model.RecentNotices)
+                {
+                    <div class="notice-item">
+                        <h6>@n.Title</h6>
+                        <p>@(n.Message.Length > 80 ? n.Message[..80] + "..." : n.Message)</p>
+                        <div class="notice-meta">
+                            <span class="badge badge-info">@n.Target</span>
+                            <span style="font-size:.7rem;color:var(--text-muted)">@n.Date.ToString("MMM dd, yyyy")</span>
+                        </div>
+                    </div>
+                }
+            }
+        </div>
+    </div>
+</div>

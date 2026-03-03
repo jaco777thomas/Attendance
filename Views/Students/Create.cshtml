@@ -1,0 +1,38 @@
+@model Attendance.Models.ViewModels.StudentCreateViewModel
+@{
+    ViewData["Title"] = "Add Student";
+}
+<div class="page-header"><div><h1>➕ Add Student</h1></div><a href="@Url.Action("Index")" class="btn btn-secondary">← Back</a></div>
+<div class="card" style="max-width:680px;">
+    <div class="card-body">
+        <form asp-action="Create" method="post">
+            @Html.AntiForgeryToken()
+            <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+            <div class="form-row">
+                <div class="form-group"><label>Full Name *</label><input asp-for="Name" class="form-control" id="studentName"/><span asp-validation-for="Name" class="text-danger"></span></div>
+                <div class="form-group">
+                    <label>Class *</label>
+                    <select asp-for="Class" class="form-select" id="studentClass">
+                        <option value="NURSERY" selected="@(Model.Class == "NURSERY")">NURSERY</option>
+                        <option value="LKG">LKG</option>
+                        <option value="UKG">UKG</option>
+                        @for (int i = 1; i <= 15; i++) { <option value="@i">Class @i</option> }
+                    </select>
+                </div>
+                <div class="form-group"><label>Division *</label><select asp-for="Division" asp-items="Html.GetEnumSelectList<Attendance.Models.Entities.Division>()" class="form-select" id="studentDivision"></select></div>
+                <div class="form-group"><label>Language *</label><select asp-for="Language" asp-items="Html.GetEnumSelectList<Attendance.Models.Entities.Language>()" class="form-select" id="studentLanguage"></select></div>
+                <div class="form-group"><label>Date of Birth</label><input asp-for="DateOfBirth" class="form-control" type="date" id="studentDob"/></div>
+                <div class="form-group"><label>Father Name *</label><input asp-for="FatherName" class="form-control" id="studentFather"/><span asp-validation-for="FatherName" class="text-danger"></span></div>
+                <div class="form-group"><label>Mother Name</label><input asp-for="MotherName" class="form-control" id="studentMother"/></div>
+                <div class="form-group"><label>Phone</label><input asp-for="Phone" class="form-control" type="tel" id="studentPhone"/></div>
+                <div class="form-group"><label>Status</label><select asp-for="Status" asp-items="Html.GetEnumSelectList<Attendance.Models.Entities.StudentStatus>()" class="form-select" id="studentStatus"></select></div>
+                <div class="form-group"><label>Academic Year</label><input asp-for="AcademicYear" class="form-control" type="number" id="studentYear"/></div>
+            </div>
+            <div class="form-group"><label>Address</label><textarea asp-for="Address" class="form-control" id="studentAddress"></textarea></div>
+            <div class="btn-group">
+                <button type="submit" class="btn btn-primary" id="saveStudent">💾 Save Student</button>
+                <a href="@Url.Action("Index")" class="btn btn-secondary">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>

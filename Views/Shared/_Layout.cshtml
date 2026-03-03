@@ -1,0 +1,145 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Sunday School Attendance Management System" />
+    <title>@ViewData["Title"] - Sunday School Attendance</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    @await RenderSectionAsync("Styles", required: false)
+</head>
+<body>
+@using Microsoft.AspNetCore.Authorization
+@using Attendance.Models.Entities
+@using System.Security.Claims
+@inject IAuthorizationService AuthorizationService
+@{
+    var userName = User.Identity?.IsAuthenticated == true ? (User.Identity.Name ?? "") : "";
+    var currentRole = string.Join(", ", User.FindAll(ClaimTypes.Role).Select(c => c.Value));
+    if (string.IsNullOrEmpty(currentRole)) currentRole = "User";
+    var initials = string.IsNullOrEmpty(userName) ? "U" : userName.Split(' ').Select(w => w[0]).Take(2).Aggregate("", (a, c) => a + c).ToUpper();
+
+    // Check permissions for dynamic menu
+    var canViewStudents = (await AuthorizationService.AuthorizeAsync(User, PermissionKeys.ViewStudents)).Succeeded;
+    var canTakeStaffAttendance = (await AuthorizationService.AuthorizeAsync(User, PermissionKeys.TakeTeacherAttendance)).Succeeded;
+    var canImport = (await AuthorizationService.AuthorizeAsync(User, PermissionKeys.DatabaseManagement)).Succeeded;
+    var canManageUsers = (await AuthorizationService.AuthorizeAsync(User, PermissionKeys.UserManagement)).Succeeded;
+    var canManageRoles = (await AuthorizationService.AuthorizeAsync(User, PermissionKeys.RoleManagement)).Succeeded;
+    var canViewReports = (await AuthorizationService.AuthorizeAsync(User, PermissionKeys.ViewReports)).Succeeded;
+    var canViewNotices = (await AuthorizationService.AuthorizeAsync(User, PermissionKeys.ViewNotifications)).Succeeded;
+    var canPromote = (await AuthorizationService.AuthorizeAsync(User, PermissionKeys.ManageStudents)).Succeeded;
+}
+@if (User.Identity?.IsAuthenticated == true)
+{
+    <div class="app-wrapper">
+        <!-- Sidebar -->
+        <nav class="sidebar" id="sidebar">
+            <div class="sidebar-brand">
+                <h2>⛪ Sunday School</h2>
+                <small>Attendance System</small>
+            </div>
+            <div class="sidebar-nav">
+                <span class="nav-section-label">Main</span>
+                <a href="@Url.Action("Index","Dashboard")" class="@(ViewContext.RouteData.Values["controller"]?.ToString() == "Dashboard" ? "active" : "")">🏠 Dashboard</a>
+
+                <span class="nav-section-label">Attendance</span>
+                <a href="@Url.Action("Students","Attendance")" class="@(ViewContext.RouteData.Values["controller"]?.ToString() == "Attendance" && ViewContext.RouteData.Values["action"]?.ToString() == "Students" ? "active" : "")">✅ Student Attendance</a>
+                @if (canTakeStaffAttendance)
+                {
+                    <a href="@Url.Action("Staff","Attendance")" class="@(ViewContext.RouteData.Values["controller"]?.ToString() == "Attendance" && ViewContext.RouteData.Values["action"]?.ToString() == "Staff" ? "active" : "")">👥 Staff Attendance</a>
+                }
+
+                <span class="nav-section-label">Records</span>
+                @if (canViewStudents)
+                {
+                    <a href="@Url.Action("Index","Students")" class="@(ViewContext.RouteData.Values["controller"]?.ToString() == "Students" ? "active" : "")">🎓 Students</a>
+                }
+                @if (canImport)
+                {
+                    <a href="@Url.Action("Index","Import")" class="@(ViewContext.RouteData.Values["controller"]?.ToString() == "Import" ? "active" : "")">📥 Import Students</a>
+                }
+                @if (canManageUsers)
+                {
+                    <a href="@Url.Action("Index","Users")" class="@(ViewContext.RouteData.Values["controller"]?.ToString() == "Users" ? "active" : "")">👥 Users Management</a>
+                }
+                @if (canManageRoles)
+                {
+                    <a href="@Url.Action("Index","Roles")" class="@(ViewContext.RouteData.Values["controller"]?.ToString() == "Roles" ? "active" : "")">🔐 Roles & Permissions</a>
+                }
+
+                <span class="nav-section-label">Reports & Info</span>
+                @if (canViewReports)
+                {
+                    <a href="@Url.Action("Index","Reports")" class="@(ViewContext.RouteData.Values["controller"]?.ToString() == "Reports" ? "active" : "")">📊 Reports</a>
+                }
+                @if (canViewNotices)
+                {
+                    <a href="@Url.Action("Index","Notices")" class="@(ViewContext.RouteData.Values["controller"]?.ToString() == "Notices" ? "active" : "")">📢 Notices</a>
+                }
+
+                @if (canPromote)
+                {
+                    <span class="nav-section-label">Academic Management</span>
+                    <a href="@Url.Action("Index","Promotion")" class="@(ViewContext.RouteData.Values["controller"]?.ToString() == "Promotion" ? "active" : "")">🎓 Year Promotion</a>
+                }
+            </div>
+            <div class="sidebar-bottom">
+                <div class="user-info">
+                    <div class="user-avatar">@initials</div>
+                    <div>
+                        <div class="user-name">@userName</div>
+                        <div class="user-role">@currentRole</div>
+                    </div>
+                </div>
+                <form asp-controller="Account" asp-action="Logout" method="post">
+                    @Html.AntiForgeryToken()
+                    <button type="submit" class="btn-logout">🚪 Sign Out</button>
+                </form>
+            </div>
+        </nav>
+        <!-- Overlay for mobile -->
+        <div id="sidebar-overlay" onclick="toggleSidebar()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:999;"></div>
+
+        <div class="main-content">
+            <div class="topbar">
+                <button class="topbar-toggle" onclick="toggleSidebar()" aria-label="Toggle menu">
+                    <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 12h18M3 6h18M3 18h18"/></svg>
+                </button>
+                <span class="topbar-title">@ViewData["Title"]</span>
+                <div class="topbar-right">
+                    <a href="@Url.Action("Profile","Account")" class="btn btn-secondary btn-sm">👤 Profile</a>
+                </div>
+            </div>
+
+            <main class="page-body">
+                @if (TempData["Success"] != null)
+                {
+                    <div class="alert alert-success">✅ @TempData["Success"]</div>
+                }
+                @if (TempData["Error"] != null)
+                {
+                    <div class="alert alert-danger">⚠️ @TempData["Error"]</div>
+                }
+                @RenderBody()
+            </main>
+        </div>
+    </div>
+}
+else
+{
+    @RenderBody()
+}
+
+<script>
+function toggleSidebar() {
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.getElementById('sidebar-overlay');
+    sidebar.classList.toggle('open');
+    overlay.style.display = sidebar.classList.contains('open') ? 'block' : 'none';
+}
+</script>
+@await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

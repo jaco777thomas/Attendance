@@ -1,0 +1,179 @@
+@model Attendance.Models.ViewModels.ReportViewModel
+@{
+    ViewData["Title"] = "Attendance Reports";
+}
+
+<div class="page-header"><h1>📊 Attendance Reports</h1></div>
+
+<!-- Filter Card -->
+<div class="card" style="margin-bottom:1.25rem;">
+    <div class="card-header"><h5>Filter</h5></div>
+    <div class="card-body">
+        <form method="get" id="reportFilter">
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Report Type</label>
+                    <select name="ReportType" class="form-select" id="reportType" onchange="toggleType()">
+                        <option value="Student" selected="@(Model.Filter.ReportType == "Student")">Student</option>
+                        <option value="Staff" selected="@(Model.Filter.ReportType == "Staff")">Staff</option>
+                    </select>
+                </div>
+                <div class="form-group" id="monthFilter">
+                    <label>Month</label>
+                    <select name="Month" class="form-select">
+                        <option value="">-- Month --</option>
+                        @for (int m = 1; m <= 12; m++)
+                        {
+                            var monthName = new DateTime(2000, m, 1).ToString("MMMM");
+                            <option value="@m" selected="@(Model.Filter.Month == m)">@monthName</option>
+                        }
+                    </select>
+                </div>
+                <div class="form-group" id="yearFilter">
+                    <label>Year</label>
+                    <select name="Year" class="form-select">
+                        @for (int y = DateTime.Now.Year; y >= 2020; y--)
+                        { <option value="@y" selected="@(Model.Filter.Year == y)">@y</option> }
+                    </select>
+                </div>
+                <div class="form-group student-only">
+                    <label>Class</label>
+                    <select name="Class" class="form-select">
+                        <option value="">All</option>
+                        <option value="NURSERY" selected="@(Model.Filter.Class == "NURSERY")">NURSERY</option>
+                        <option value="LKG" selected="@(Model.Filter.Class == "LKG")">LKG</option>
+                        <option value="UKG" selected="@(Model.Filter.Class == "UKG")">UKG</option>
+                        @for (int i = 1; i <= 15; i++) { 
+                            <option value="@i" selected="@(Model.Filter.Class == i.ToString())">Class @i</option> 
+                        }
+                    </select>
+                </div>
+                <div class="form-group student-only">
+                    <label>Division</label>
+                    <select name="Division" class="form-select">
+                        <option value="">All</option>
+                        <option value="A" selected="@(Model.Filter.Division == Attendance.Models.Entities.Division.A)">A</option>
+                        <option value="B" selected="@(Model.Filter.Division == Attendance.Models.Entities.Division.B)">B</option>
+                        <option value="C" selected="@(Model.Filter.Division == Attendance.Models.Entities.Division.C)">C</option>
+                    </select>
+                </div>
+                <div class="form-group student-only">
+                    <label>Language</label>
+                    <select name="Language" class="form-select">
+                        <option value="">All</option>
+                        <option value="English" selected="@(Model.Filter.Language == Attendance.Models.Entities.Language.English)">English</option>
+                        <option value="Kannada" selected="@(Model.Filter.Language == Attendance.Models.Entities.Language.Kannada)">Kannada</option>
+                        <option value="Malayalam" selected="@(Model.Filter.Language == Attendance.Models.Entities.Language.Malayalam)">Malayalam</option>
+                    </select>
+                </div>
+                <div class="form-group student-only">
+                    <label>Student</label>
+                    <select name="StudentId" class="form-select">
+                        <option value="">All Students</option>
+                        @foreach (var s in Model.Students) { <option value="@s.Id" selected="@(Model.Filter.StudentId == s.Id)">@s.Name (@s.Class-@s.Division)</option> }
+                    </select>
+                </div>
+                <div class="form-group staff-only" style="display:none;">
+                    <label>Staff Members</label>
+                    <select name="TeacherId" class="form-select">
+                        <option value="">All Staff</option>
+                        @foreach (var t in Model.Teachers) { <option value="@t.Id" selected="@(Model.Filter.TeacherId == t.Id)">@t.Name</option> }
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>&nbsp;</label>
+                    <button type="submit" class="btn btn-primary" id="applyReportFilter">🔍 Generate</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+@if (Model.Filter.ReportType == "Staff" && Model.StaffRows.Any())
+{
+    <div class="card" style="margin-bottom:1rem;">
+        <div class="card-header">
+            <h5>Staff Attendance Summary</h5>
+            <div class="btn-group">
+                <a href="@Url.Action("ExportExcel", new { Model.Filter.ReportType, Model.Filter.Month, Model.Filter.Year, Model.Filter.TeacherId })" class="btn btn-success btn-sm" id="exportStaffExcel">📥 Excel</a>
+                <a href="@Url.Action("ExportPdf", new { Model.Filter.ReportType, Model.Filter.Month, Model.Filter.Year, Model.Filter.TeacherId })" class="btn btn-danger btn-sm" id="exportStaffPdf">📄 PDF</a>
+            </div>
+        </div>
+        <div class="table-responsive">
+            <table>
+                <thead><tr><th>#</th><th>Staff Name</th><th>Total Days</th><th>Present</th><th>Absent</th><th>Attendance %</th></tr></thead>
+                <tbody>
+                    @{ int ti = 1; }
+                    @foreach (var r in Model.StaffRows)
+                    {
+                        <tr>
+                            <td>@ti++</td><td><strong>@r.StaffName</strong></td>
+                            <td>@r.TotalDays</td><td><span class="badge badge-success">@r.PresentDays</span></td>
+                            <td><span class="badge badge-danger">@(r.TotalDays - r.PresentDays)</span></td>
+                            <td>
+                                <div style="display:flex;align-items:center;gap:.5rem;">
+                                    <div style="height:8px;width:80px;background:var(--border);border-radius:4px;overflow:hidden;">
+                                        <div style="height:100%;width:@((int)r.Percentage)%;background:var(--success);border-radius:4px;"></div>
+                                    </div>
+                                    <strong>@r.Percentage%</strong>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+}
+else if (Model.Filter.ReportType == "Student" && Model.StudentRows.Any())
+{
+    <div class="card">
+        <div class="card-header">
+            <h5>Student Attendance Summary</h5>
+            <div class="btn-group">
+                <a href="@Url.Action("ExportExcel", new { Model.Filter.ReportType, Model.Filter.Month, Model.Filter.Year, Model.Filter.Class, Model.Filter.Division, Model.Filter.Language, Model.Filter.StudentId })" class="btn btn-success btn-sm" id="exportStudentExcel">📥 Excel</a>
+                <a href="@Url.Action("ExportPdf", new { Model.Filter.ReportType, Model.Filter.Month, Model.Filter.Year, Model.Filter.Class, Model.Filter.Division, Model.Filter.Language, Model.Filter.StudentId })" class="btn btn-danger btn-sm" id="exportStudentPdf">📄 PDF</a>
+            </div>
+        </div>
+        <div class="table-responsive">
+            <table>
+                <thead><tr><th>#</th><th>Student Name</th><th>Class</th><th>Div</th><th>Lang</th><th>Total</th><th>Present</th><th>Absent</th><th>%</th></tr></thead>
+                <tbody>
+                    @{ int si = 1; }
+                    @foreach (var r in Model.StudentRows)
+                    {
+                        <tr>
+                            <td>@si++</td><td><strong>@r.StudentName</strong></td>
+                            <td>@r.Class</td><td>@r.Division</td><td>@r.Language</td><td>@r.TotalDays</td>
+                            <td><span class="badge badge-success">@r.PresentDays</span></td>
+                            <td><span class="badge badge-danger">@(r.TotalDays - r.PresentDays)</span></td>
+                            <td>
+                                <div style="display:flex;align-items:center;gap:.5rem;">
+                                    <div style="height:8px;width:80px;background:var(--border);border-radius:4px;overflow:hidden;">
+                                        <div style="height:100%;width:@((int)r.Percentage)%;background:@(r.Percentage >= 75 ? "var(--success)" : "var(--danger)");border-radius:4px;"></div>
+                                    </div>
+                                    <strong style="color:@(r.Percentage >= 75 ? "var(--success)" : "var(--danger)")">@r.Percentage%</strong>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+}
+else if ((Model.Filter.FromDate.HasValue || Model.Filter.Month.HasValue))
+{
+    <div class="alert alert-info">No attendance records found for the selected filters.</div>
+}
+
+@section Scripts {
+<script>
+function toggleType() {
+    const type = document.getElementById('reportType').value;
+    document.querySelectorAll('.student-only').forEach(e => e.style.display = type === 'Student' ? '' : 'none');
+    document.querySelectorAll('.staff-only').forEach(e => e.style.display = type === 'Staff' ? '' : 'none');
+}
+toggleType();
+</script>
+}

@@ -1,0 +1,169 @@
+@model Attendance.Models.ViewModels.PromotionViewModel
+@{
+    ViewData["Title"] = "Year Promotion";
+}
+
+<div class="page-header">
+    <div><h1>🎓 Year Promotion</h1><p>Promote students to the next class</p></div>
+</div>
+
+@if (Model.ShowFinalClassWarning)
+{
+    <div class="promotion-warning">
+        ⚠️ <strong>Note:</strong> Some students are in Class 15 (final class). They will be marked <strong>Inactive</strong> if you choose to mark final class as inactive.
+    </div>
+}
+
+<!-- Filters -->
+<div class="card" style="margin-bottom:1.25rem;">
+    <div class="card-body">
+        <form method="get" id="promotionFilter">
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Filter By Class</label>
+                    <select name="filterClass" class="form-select" id="promFilterClass">
+                        <option value="">All Classes</option>
+                        <option value="NURSERY" selected="@(Model.FilterClass == "NURSERY")">NURSERY</option>
+                        <option value="LKG" selected="@(Model.FilterClass == "LKG")">LKG</option>
+                        <option value="UKG" selected="@(Model.FilterClass == "UKG")">UKG</option>
+                        @for (int i = 1; i <= 15; i++) { 
+                            <option value="@i" selected="@(Model.FilterClass == i.ToString())">Class @i</option> 
+                        }
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Division</label>
+                    <select name="filterDivision" class="form-select" id="promFilterDiv">
+                        <option value="">All</option>
+                        <option value="A" selected="@(Model.FilterDivision == Attendance.Models.Entities.Division.A)">A</option>
+                        <option value="B" selected="@(Model.FilterDivision == Attendance.Models.Entities.Division.B)">B</option>
+                        <option value="C" selected="@(Model.FilterDivision == Attendance.Models.Entities.Division.C)">C</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Language</label>
+                    <select name="filterLanguage" class="form-select" id="promFilterLang">
+                        <option value="">All</option>
+                        <option value="English" selected="@(Model.FilterLanguage == Attendance.Models.Entities.Language.English)">English</option>
+                        <option value="Kannada" selected="@(Model.FilterLanguage == Attendance.Models.Entities.Language.Kannada)">Kannada</option>
+                        <option value="Malayalam" selected="@(Model.FilterLanguage == Attendance.Models.Entities.Language.Malayalam)">Malayalam</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>&nbsp;</label>
+                    <div class="btn-group">
+                        <button type="submit" class="btn btn-secondary" id="filterPromotion">🔍 Filter</button>
+                        <a href="@Url.Action("Index", new { promoteAll = true })" class="btn btn-outline-primary" id="promoteAllBtn">Promote All</a>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+@if (Model.PreviewStudents.Any())
+{
+    <!-- Promotion Options -->
+    <div class="card" style="margin-bottom:1rem;">
+        <div class="card-body" style="display:flex;align-items:center;gap:1.5rem;flex-wrap:wrap;">
+            <label class="form-check">
+                <input type="checkbox" id="markFinalInactive" checked /> Mark Class 15 students as <strong>Inactive</strong>
+            </label>
+            <button class="btn btn-primary" id="promoteSelectedBtn" onclick="promoteSelected()">🎓 Promote Selected (@Model.PreviewStudents.Count students)</button>
+            <button class="btn btn-secondary" id="selectAllPromo" onclick="toggleSelectAll()">Select All</button>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="table-responsive">
+            <table>
+                <thead>
+                    <tr><th><input type="checkbox" id="checkAll" onchange="document.querySelectorAll('.promo-check').forEach(c => c.checked = this.checked)" /></th>
+                    <th>#</th><th>Name</th><th>Current Class</th><th>Division</th><th>Will Become</th></tr>
+                </thead>
+                <tbody>
+                    @{ int idx = 1; }
+                    @foreach (var s in Model.PreviewStudents)
+                    {
+                        bool isFinal = s.Class == Model.FinalClass;
+                        <tr class="@(isFinal ? "final-student" : "")">
+                            <td><input type="checkbox" class="promo-check" value="@s.Id" checked /></td>
+                            <td>@idx++</td>
+                            <td><strong>@s.Name</strong></td>
+                            <td><span class="badge badge-info">Class @s.Class</span></td>
+                            <td>@s.Division</td>
+                            <td>
+                                @if (isFinal)
+                                { <span class="badge badge-danger">🔒 Inactive</span> }
+                                else
+                                { 
+                                    string next = s.Class == "LKG" ? "UKG" : (s.Class == "UKG" ? "1" : (int.TryParse(s.Class, out int n) ? (n + 1).ToString() : "?"));
+                                    <span class="badge badge-success">@next</span> 
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+}
+else
+{
+    <div class="alert alert-info">No active students found. Adjust your filters.</div>
+}
+
+<!-- Confirm Modal -->
+<div id="confirmModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9999;display:flex;align-items:center;justify-content:center;">
+    <div style="background:#fff;border-radius:16px;padding:2rem;max-width:400px;width:90%;box-shadow:0 25px 50px rgba(0,0,0,.25);">
+        <h4 style="margin-bottom:.75rem;">🎓 Confirm Promotion</h4>
+        <p id="confirmText" style="color:var(--text-muted);margin-bottom:1.25rem;"></p>
+        <div class="btn-group">
+            <button class="btn btn-primary" id="confirmPromote" onclick="doPromote()">✅ Confirm</button>
+            <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+let toPromote = [];
+
+function promoteSelected() {
+    toPromote = Array.from(document.querySelectorAll('.promo-check:checked')).map(c => parseInt(c.value));
+    if (!toPromote.length) { alert('Select at least one student.'); return; }
+    document.getElementById('confirmText').textContent = `Promote ${toPromote.length} selected student(s) to the next class?`;
+    document.getElementById('confirmModal').style.display = 'flex';
+}
+
+function closeModal() { document.getElementById('confirmModal').style.display = 'none'; }
+
+async function doPromote() {
+    const markFinal = document.getElementById('markFinalInactive').checked;
+    const btn = document.getElementById('confirmPromote');
+    btn.textContent = '⏳ Processing...'; btn.disabled = true;
+
+    const res = await fetch('/Promotion/Promote', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]')?.value ?? '' },
+        body: JSON.stringify({ studentIds: toPromote, markFinalAsInactive: markFinal })
+    });
+    const data = await res.json();
+    closeModal();
+    if (data.success) {
+        alert(data.message);
+        location.reload();
+    } else {
+        alert(data.message || 'An error occurred.');
+    }
+}
+
+function toggleSelectAll() {
+    const all = document.querySelectorAll('.promo-check');
+    const anyUnchecked = Array.from(all).some(c => !c.checked);
+    all.forEach(c => c.checked = anyUnchecked);
+    document.getElementById('checkAll').checked = anyUnchecked;
+}
+</script>
+@Html.AntiForgeryToken()
+}

@@ -1,0 +1,257 @@
+﻿@{
+    Layout = null;
+    var isAuthenticated = User.Identity?.IsAuthenticated == true;
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>IPC Shalom Worship Center Sunday School</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <style>
+        :root {
+            --glass-bg: rgba(255, 255, 255, 0.7);
+            --glass-border: rgba(255, 255, 255, 0.3);
+            --accent: #4f46e5;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #f8fafc;
+            color: #1e293b;
+            margin: 0;
+            overflow-x: hidden;
+        }
+
+        .landing-hero {
+            position: relative;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(rgba(30, 27, 75, 0.7), rgba(30, 27, 75, 0.7)), url('/images/hero.png');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            padding: 2rem;
+            text-align: center;
+            color: #fff;
+        }
+
+        .hero-content {
+            max-width: 900px;
+            z-index: 2;
+            animation: fadeInDown 1s ease-out;
+        }
+
+        .hero-title {
+            font-family: 'Outfit', sans-serif;
+            font-size: clamp(2.5rem, 8vw, 4.5rem);
+            font-weight: 700;
+            line-height: 1.1;
+            margin-bottom: 1.5rem;
+            text-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        }
+
+        .hero-subtitle {
+            font-size: clamp(1.1rem, 3vw, 1.35rem);
+            opacity: 0.9;
+            margin-bottom: 2.5rem;
+            max-width: 700px;
+            margin-inline: auto;
+            line-height: 1.6;
+        }
+
+        .glass-container {
+            background: var(--glass-bg);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
+            padding: 3rem;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+            color: #1e293b;
+            margin-top: -80px;
+            position: relative;
+            z-index: 10;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 2rem;
+            margin-top: 4rem;
+            padding: 0 2rem 5rem;
+        }
+
+        .feature-item {
+            background: #fff;
+            padding: 2.5rem;
+            border-radius: 20px;
+            box-shadow: var(--shadow);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            text-align: center;
+        }
+
+        .feature-item:hover {
+            transform: translateY(-8px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .feature-icon {
+            font-size: 2.5rem;
+            margin-bottom: 1.5rem;
+            display: inline-block;
+        }
+
+        .feature-item h3 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+
+        .feature-item p {
+            font-size: 0.95rem;
+            color: var(--text-muted);
+            line-height: 1.5;
+        }
+
+        .cta-buttons {
+            display: flex;
+            gap: 1.5rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .btn-landing {
+            padding: 1rem 2.5rem;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 1.1rem;
+            transition: all 0.3s;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .btn-glow {
+            background: #fff;
+            color: var(--sidebar-bg);
+            box-shadow: 0 10px 20px rgba(255,255,255,0.2);
+        }
+
+        .btn-glow:hover {
+            transform: scale(1.05);
+            background: #eef2ff;
+        }
+
+        .btn-outline {
+            background: rgba(255,255,255,0.1);
+            border: 2px solid rgba(255,255,255,0.4);
+            color: #fff;
+            backdrop-filter: blur(4px);
+        }
+
+        .btn-outline:hover {
+            background: rgba(255,255,255,0.2);
+            border-color: #fff;
+        }
+
+        @@keyframes fadeInDown {
+            from { opacity: 0; transform: translateY(-30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .church-footer {
+            background: #1e1b4b;
+            color: rgba(255,255,255,0.6);
+            padding: 4rem 2rem;
+            text-align: center;
+            font-size: 0.9rem;
+        }
+
+        .church-footer strong {
+            color: #fff;
+            font-family: 'Outfit', sans-serif;
+            display: block;
+            margin-bottom: 0.5rem;
+            font-size: 1.1rem;
+        }
+    </style>
+</head>
+<body>
+    <header class="landing-hero">
+        <div class="hero-content">
+            <h1 class="hero-title">IPC Shalom Worship Center Sunday School</h1>
+            <p class="hero-subtitle">Cultivating faith, nurturing hearts, and building a foundation for the next generation of disciples.</p>
+            <div class="cta-buttons">
+                @if (isAuthenticated)
+                {
+                    <a href="@Url.Action("Index", "Dashboard")" class="btn-landing btn-glow">🏠 Welcome Back! Go to Dashboard</a>
+                }
+                else
+                {
+                    <a href="@Url.Action("Login", "Account")" class="btn-landing btn-glow">👉 Staff Sign In</a>
+                }
+                <a href="#features" class="btn-landing btn-outline">Learn More ↓</a>
+            </div>
+        </div>
+    </header>
+
+    <main id="features">
+        <div class="container" style="max-width: 1200px; margin: 0 auto;">
+            <div class="glass-container">
+                <div style="text-align: center; max-width: 800px; margin: 0 auto;">
+                    <h2 style="font-family: 'Outfit', sans-serif; font-size: 2.25rem; font-weight: 700; margin-bottom: 1.5rem;">Digital Sunday School Management</h2>
+                    <p style="color: var(--text-muted); font-size: 1.1rem; line-height: 1.6;">Our comprehensive attendance and records system ensures that every child's spiritual journey is mapped with care and precision, allowing our teachers to focus on what matters most: ministry.</p>
+                </div>
+            </div>
+
+            <div class="features-grid">
+                <div class="feature-item">
+                    <span class="feature-icon">✅</span>
+                    <h3>Swift Attendance</h3>
+                    <p>Mark student and teacher attendance in seconds. Optimized for mobile use for teachers in classrooms.</p>
+                </div>
+                <div class="feature-item">
+                    <span class="feature-icon">📊</span>
+                    <h3>Insightful Reports</h3>
+                    <p>Track growth and consistency over time with automated reports for classes and individual students.</p>
+                </div>
+                <div class="feature-item">
+                    <span class="feature-icon">📢</span>
+                    <h3>Live Notice Board</h3>
+                    <p>Instant communication with staff. Post and view important updates and spiritual reminders.</p>
+                </div>
+                <div class="feature-item">
+                    <span class="feature-icon">🎓</span>
+                    <h3>Yearly Promotion</h3>
+                    <p>Automated academic transitions. Smoothly bridge classes at the end of each Sunday School year.</p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="church-footer">
+        <strong>IPC Shalom Worship Center</strong>
+        <p>Sunday School Department &copy; @DateTime.Today.Year. All rights reserved.</p>
+        <p style="margin-top: 1rem; font-size: 0.75rem; letter-spacing: 1px; text-transform: uppercase;">Shaping faith for a brighter tomorrow</p>
+    </footer>
+
+    <script>
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                document.querySelector(this.getAttribute('href')).scrollIntoView({
+                    behavior: 'smooth'
+                });
+            });
+        });
+    </script>
+</body>
+</html>

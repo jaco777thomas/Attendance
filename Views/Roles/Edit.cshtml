@@ -1,0 +1,51 @@
+@model Attendance.Models.ViewModels.RoleEditViewModel
+@{
+    ViewData["Title"] = "Edit Role";
+}
+
+<div class="page-header">
+    <div>
+        <h1>✏️ Edit Role: @Model.Name</h1>
+        <p>Modify role details and permissions.</p>
+    </div>
+    <a href="@Url.Action("Index")" class="btn btn-secondary">⬅️ Back to List</a>
+</div>
+
+<div class="card shadow-sm" style="max-width: 800px; margin: 0 auto;">
+    <form asp-action="Edit" method="post" style="padding: 2rem;">
+        @Html.AntiForgeryToken()
+        <input type="hidden" asp-for="Id" />
+
+        <div class="form-group">
+            <label asp-for="Name">Role Name</label>
+            <input asp-for="Name" class="form-control" placeholder="e.g., Staff Manager" required />
+            <span asp-validation-for="Name" class="text-danger"></span>
+        </div>
+
+        <div class="form-group mt-3">
+            <label asp-for="Description">Description</label>
+            <textarea asp-for="Description" class="form-control" rows="2" placeholder="What can this role do?"></textarea>
+            <span asp-validation-for="Description" class="text-danger"></span>
+        </div>
+
+        <div class="mt-4">
+            <h5 style="margin-bottom: 1rem; border-bottom: 1px solid var(--border); padding-bottom: 0.5rem;">Manage Permissions</h5>
+            <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1rem;">
+                @foreach (var perm in Model.AvailablePermissions)
+                {
+                    <div class="checkbox-item" style="display: flex; align-items: center; gap: 0.75rem; padding: 0.5rem; background: var(--bg-alt); border-radius: 8px;">
+                        <input type="checkbox" name="SelectedPermissionIds" value="@perm.Id" id="perm_@perm.Id" 
+                               @(Model.SelectedPermissionIds.Contains(perm.Id) ? "checked" : "") 
+                               style="width: 18px; height: 18px;" />
+                        <label for="perm_@perm.Id" style="margin: 0; cursor: pointer; font-weight: 500;">@perm.Name</label>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <div class="mt-5" style="display: flex; gap: 1rem;">
+            <button type="submit" class="btn btn-primary" style="flex: 1;">Save Changes</button>
+            <a href="@Url.Action("Index")" class="btn btn-secondary" style="flex: 1;">Cancel</a>
+        </div>
+    </form>
+</div>

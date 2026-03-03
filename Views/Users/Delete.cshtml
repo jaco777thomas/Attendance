@@ -1,0 +1,13 @@
+@model Attendance.Models.Entities.User
+@{ ViewData["Title"] = "Delete User"; }
+<div class="page-header"><h1>🗑️ Delete User</h1></div>
+<div class="card" style="max-width:480px;"><div class="card-body">
+    <div class="alert alert-danger">Delete user <strong>@Model.Name</strong> (@(string.Join(", ", Model.UserRoles.Select(ur => ur.Role.Name))))?</div>
+    <form asp-action="Delete" asp-route-id="@Model.Id" method="post">
+        @Html.AntiForgeryToken()
+        <div class="btn-group">
+            <button type="submit" class="btn btn-danger" id="confirmDeleteUser">🗑️ Delete</button>
+            <a href="@Url.Action("Index")" class="btn btn-secondary">Cancel</a>
+        </div>
+    </form>
+</div></div>

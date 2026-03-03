@@ -1,0 +1,42 @@
+@model Attendance.Models.ViewModels.LoginViewModel
+@{
+    Layout = null;
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Login – Sunday School Attendance</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="~/css/site.css" />
+</head>
+<body>
+<div class="login-page">
+    <div class="login-card">
+        <div class="login-logo">
+            <div class="icon">⛪</div>
+            <h1>Sunday School</h1>
+            <p>Attendance Management System</p>
+        </div>
+        <form asp-action="Login" method="post">
+            <input type="hidden" asp-for="ReturnUrl"/>
+            @Html.AntiForgeryToken()
+            <div asp-validation-summary="ModelOnly" class="alert alert-danger" style="display:@(ViewData.ModelState.IsValid ? "none" : "block")"></div>
+            <div class="form-group">
+                <label asp-for="Email">Email Address</label>
+                <input asp-for="Email" class="form-control" type="email" placeholder="admin@church.org" id="loginEmail" autocomplete="email" />
+                <span asp-validation-for="Email" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="Password">Password</label>
+                <input asp-for="Password" class="form-control" type="password" placeholder="••••••••" id="loginPassword" autocomplete="current-password" />
+                <span asp-validation-for="Password" class="text-danger"></span>
+            </div>
+            <button type="submit" class="btn btn-primary" id="loginBtn" style="width:100%;justify-content:center;padding:.75rem;">Sign In →</button>
+        </form>
+    </div>
+</div>
+</body>
+</html>

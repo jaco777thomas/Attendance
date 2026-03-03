@@ -1,0 +1,19 @@
+@model Attendance.Models.Entities.Student
+@{ ViewData["Title"] = "Delete Student"; }
+<div class="page-header"><h1>🗑️ Delete Student</h1></div>
+<div class="card" style="max-width:480px;">
+    <div class="card-body">
+        <div class="alert alert-danger">Are you sure you want to delete <strong>@Model.Name</strong>? This will also delete all their attendance records.</div>
+        <dl style="font-size:.875rem;margin-bottom:1rem;">
+            <dt>Class</dt><dd>@Model.Class – @Model.Division</dd>
+            <dt>Father</dt><dd>@Model.FatherName</dd>
+        </dl>
+        <form asp-action="Delete" asp-route-id="@Model.Id" method="post">
+            @Html.AntiForgeryToken()
+            <div class="btn-group">
+                <button type="submit" class="btn btn-danger" id="confirmDelete">🗑️ Yes, Delete</button>
+                <a href="@Url.Action("Index")" class="btn btn-secondary">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>

@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: sunday-school-attendance
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    envVars:
+      - key: DATABASE_URL
+        sync: false   # Set this manually in Render dashboard
+      - key: ASPNETCORE_ENVIRONMENT
+        value: Production
+    healthCheckPath: /Account/Login
+    plan: free

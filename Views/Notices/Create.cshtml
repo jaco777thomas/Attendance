@@ -1,0 +1,18 @@
+@model Attendance.Models.ViewModels.NoticeCreateViewModel
+@{ ViewData["Title"] = "Post Notice"; }
+<div class="page-header"><h1>📢 Post Notice</h1><a href="@Url.Action("Index")" class="btn btn-secondary">← Back</a></div>
+<div class="card" style="max-width:560px;">
+    <div class="card-body">
+        <form asp-action="Create" method="post">
+            @Html.AntiForgeryToken()
+            <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+            <div class="form-group"><label>Title *</label><input asp-for="Title" class="form-control" id="noticeTitle"/><span asp-validation-for="Title" class="text-danger"></span></div>
+            <div class="form-group"><label>Message *</label><textarea asp-for="Message" class="form-control" rows="5" id="noticeMessage"></textarea><span asp-validation-for="Message" class="text-danger"></span></div>
+            <div class="form-group"><label>Audience</label><select asp-for="Target" asp-items="Html.GetEnumSelectList<Attendance.Models.Entities.NoticeTarget>()" class="form-select" id="noticeTarget"></select></div>
+            <div class="btn-group">
+                <button type="submit" class="btn btn-primary" id="saveNotice">📢 Post Notice</button>
+                <a href="@Url.Action("Index")" class="btn btn-secondary">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
