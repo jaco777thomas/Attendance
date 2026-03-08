@@ -75,6 +75,19 @@ public class DashboardController : Controller
         var (presentStaff, absentStaff) = await _attendanceService.GetStaffTodaySummaryAsync();
         var staffAttendance = await _attendanceService.GetStaffAttendanceAsync(today);
 
+        List<string> absentStudentNames = new();
+        if (isRestricted && !string.IsNullOrEmpty(fClass))
+        {
+            var ids = allActiveStudents.Select(s => s.Id).ToList();
+            absentStudentNames = await _attendanceService.GetAbsentStudentNamesAsync(ids, today);
+        }
+        else
+        {
+            absentStudentNames = await _attendanceService.GetAbsentStudentNamesAsync(null, today);
+        }
+
+        var absentStaffNames = await _attendanceService.GetAbsentStaffNamesAsync(today);
+
         var vm = new DashboardViewModel
         {
             TotalStudents = totalStudents.Count,
@@ -84,6 +97,8 @@ public class DashboardController : Controller
             AbsentStudentsToday = absentToday,
             PresentTeachersToday = presentStaff,
             AbsentTeachersToday = absentStaff,
+            AbsentStudentNames = absentStudentNames,
+            AbsentTeacherNames = absentStaffNames,
             RecentNotices = notices.Take(5).ToList(),
             AttendanceMarkedToday = staffAttendance.ContainsKey(userId)
         };

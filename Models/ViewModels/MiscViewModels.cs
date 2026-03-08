@@ -41,6 +41,8 @@ public class DashboardViewModel
     public int AbsentStudentsToday { get; set; }
     public int PresentTeachersToday { get; set; }
     public int AbsentTeachersToday { get; set; }
+    public List<string> AbsentStudentNames { get; set; } = new();
+    public List<string> AbsentTeacherNames { get; set; } = new();
     public List<Notice> RecentNotices { get; set; } = new();
     public bool AttendanceMarkedToday { get; set; }
 }

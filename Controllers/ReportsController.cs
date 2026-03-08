@@ -82,14 +82,22 @@ public class ReportsController : Controller
                 var targetDiv = isRestricted ? teacherDiv : filter.Division;
                 var targetLang = isRestricted ? teacherLang : filter.Language;
 
+                var activeStudents = await _studentService.GetAllAsync(targetClass, targetDiv, targetLang, StudentStatus.Active, null);
                 var records = await _attendanceService.GetStudentAttendanceRangeAsync(filter.StudentId, targetClass, targetDiv, targetLang, from, to);
-                vm.StudentRows = records.GroupBy(r => new { r.StudentId, r.Student.Name, r.Student.Class, Division = r.Student.Division ?? Division.A, Language = r.Student.Language ?? Language.English })
-                    .Select(g => new StudentAttendanceReportRow
+                
+                // Total sessions: distinct dates in the attendance table for this group in this range
+                var totalSessions = records.Select(r => r.Date.Date).Distinct().Count();
+
+                vm.StudentRows = activeStudents.Select(s => {
+                    var studentRecords = records.Where(r => r.StudentId == s.Id).ToList();
+                    var presentDays = studentRecords.Count(r => r.Status == AttendanceStatus.Present);
+                    return new StudentAttendanceReportRow
                     {
-                        StudentId = g.Key.StudentId, StudentName = g.Key.Name,
-                        Class = g.Key.Class, Division = g.Key.Division, Language = g.Key.Language,
-                        TotalDays = g.Count(), PresentDays = g.Count(r => r.Status == AttendanceStatus.Present)
-                    }).OrderBy(r => r.Class).ThenBy(r => r.StudentName).ToList();
+                        StudentId = s.Id, StudentName = s.Name,
+                        Class = s.Class, Division = s.Division ?? Division.A, Language = s.Language ?? Language.English,
+                        TotalDays = totalSessions, PresentDays = presentDays
+                    };
+                }).OrderBy(r => r.Class).ThenBy(r => r.StudentName).ToList();
             }
         }
         return View(vm);

@@ -37,13 +37,38 @@
     </div>
     <div class="stat-card">
         <div class="stat-icon red">❌</div>
-        <div><div class="stat-value">@Model.AbsentStudentsToday</div><div class="stat-label">Students Absent Today</div></div>
+        <div>
+            <div class="stat-value">@Model.AbsentStudentsToday</div>
+            <div class="stat-label">Students Absent Today</div>
+            @if (Model.AbsentStudentNames.Any())
+            {
+                <div class="stat-meta" title="@string.Join(", ", Model.AbsentStudentNames)">
+                    <small>@string.Join(", ", Model.AbsentStudentNames.Take(3))@(Model.AbsentStudentNames.Count > 3 ? "..." : "")</small>
+                </div>
+            }
+        </div>
     </div>
     @if (isAdmin)
     {
         <div class="stat-card">
             <div class="stat-icon blue">👩‍🏫✅</div>
-            <div><div class="stat-value">@Model.PresentTeachersToday</div><div class="stat-label">Teachers Present Today</div></div>
+            <div>
+                <div class="stat-value">@Model.PresentTeachersToday</div>
+                <div class="stat-label">Teachers Present Today</div>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon red">👩‍🏫❌</div>
+            <div>
+                <div class="stat-value">@Model.AbsentTeachersToday</div>
+                <div class="stat-label">Teachers Absent Today</div>
+                @if (Model.AbsentTeacherNames.Any())
+                {
+                    <div class="stat-meta" title="@string.Join(", ", Model.AbsentTeacherNames)">
+                        <small>@string.Join(", ", Model.AbsentTeacherNames.Take(3))@(Model.AbsentTeacherNames.Count > 3 ? "..." : "")</small>
+                    </div>
+                }
+            </div>
         </div>
     }
 </div>

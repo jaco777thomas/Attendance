@@ -15,6 +15,8 @@ public interface IAttendanceService
     Task<List<StaffAttendance>> GetStaffAttendanceRangeAsync(int? userId, DateTime from, DateTime to);
     Task<(int Present, int Absent)> GetTodaySummaryAsync();
     Task<(int Present, int Absent)> GetStaffTodaySummaryAsync();
+    Task<List<string>> GetAbsentStudentNamesAsync(List<int>? studentIds, DateTime date);
+    Task<List<string>> GetAbsentStaffNamesAsync(DateTime date);
 }
 
 public class AttendanceService : IAttendanceService
@@ -121,5 +123,28 @@ public class AttendanceService : IAttendanceService
         var today = DateTime.SpecifyKind(DateTime.Today.Date, DateTimeKind.Unspecified);
         var records = await _db.StaffAttendances.Where(a => a.Date == today).ToListAsync();
         return (records.Count(r => r.Status == AttendanceStatus.Present), records.Count(r => r.Status == AttendanceStatus.Absent));
+    }
+
+    public async Task<List<string>> GetAbsentStudentNamesAsync(List<int>? studentIds, DateTime date)
+    {
+        var targetDate = DateTime.SpecifyKind(date.Date, DateTimeKind.Unspecified);
+        var query = _db.StudentAttendances
+            .Include(a => a.Student)
+            .Where(a => a.Date == targetDate && a.Status == AttendanceStatus.Absent);
+        
+        if (studentIds != null && studentIds.Any())
+            query = query.Where(a => studentIds.Contains(a.StudentId));
+
+        return await query.Select(a => a.Student.Name).ToListAsync();
+    }
+
+    public async Task<List<string>> GetAbsentStaffNamesAsync(DateTime date)
+    {
+        var targetDate = DateTime.SpecifyKind(date.Date, DateTimeKind.Unspecified);
+        return await _db.StaffAttendances
+            .Include(a => a.User)
+            .Where(a => a.Date == targetDate && a.Status == AttendanceStatus.Absent)
+            .Select(a => a.User.Name)
+            .ToListAsync();
     }
 }

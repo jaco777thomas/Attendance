@@ -41,13 +41,27 @@ public class ExportService : IExportService
         if (f.Language.HasValue) query = query.Where(a => a.Student.Language == f.Language.Value);
 
         var records = await query.ToListAsync();
-        return records.GroupBy(a => new { a.StudentId, a.Student.Name, a.Student.Class, Division = a.Student.Division ?? Division.A, Language = a.Student.Language ?? Attendance.Models.Entities.Language.English })
-            .Select(g => new StudentAttendanceReportRow
+
+        // Get all active students that match the filters
+        var sQuery = _db.Students.Where(s => s.Status == StudentStatus.Active);
+        if (!string.IsNullOrEmpty(f.Class)) sQuery = sQuery.Where(s => s.Class == f.Class);
+        if (f.Division.HasValue) sQuery = sQuery.Where(s => s.Division == f.Division.Value);
+        if (f.Language.HasValue) sQuery = sQuery.Where(s => s.Language == f.Language.Value);
+        if (f.StudentId.HasValue) sQuery = sQuery.Where(s => s.Id == f.StudentId.Value);
+
+        var activeStudents = await sQuery.ToListAsync();
+        var totalSessions = records.Select(r => r.Date.Date).Distinct().Count();
+
+        return activeStudents.Select(s => {
+            var studentRecords = records.Where(r => r.StudentId == s.Id).ToList();
+            var presentDays = studentRecords.Count(r => r.Status == AttendanceStatus.Present);
+            return new StudentAttendanceReportRow
             {
-                StudentId = g.Key.StudentId, StudentName = g.Key.Name,
-                Class = g.Key.Class, Division = g.Key.Division, Language = g.Key.Language,
-                TotalDays = g.Count(), PresentDays = g.Count(a => a.Status == AttendanceStatus.Present)
-            }).OrderBy(r => r.Class).ThenBy(r => r.StudentName).ToList();
+                StudentId = s.Id, StudentName = s.Name,
+                Class = s.Class, Division = s.Division ?? Division.A, Language = s.Language ?? Attendance.Models.Entities.Language.English,
+                TotalDays = totalSessions, PresentDays = presentDays
+            };
+        }).OrderBy(r => r.Class).ThenBy(r => r.StudentName).ToList();
     }
 
     private async Task<List<StaffAttendanceReportRow>> BuildStaffRows(ReportFilterViewModel f)
